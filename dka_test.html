@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DKA Test — Davlat Kadastrlari Asoslari</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Playfair+Display:wght@700;900&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e12;
+    --surface: #16161d;
+    --card: #1e1e28;
+    --border: #2e2e40;
+    --accent: #e8c547;
+    --accent2: #5b8af0;
+    --accent3: #e05c7a;
+    --text: #e8e6f0;
+    --muted: #7a7a99;
+    --correct: #4caf7d;
+    --wrong: #e05c7a;
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Source Serif 4', Georgia, serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid texture background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(232,197,71,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(232,197,71,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── SCREEN WRAPPER ── */
+  .screen { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+
+  /* ── LANDING ── */
+  #landing { gap: 48px; }
+
+  .logo-area { text-align: center; }
+  .logo-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: block;
+  }
+  .logo-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(36px, 6vw, 72px);
+    font-weight: 900;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--accent) 0%, #fff 50%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .logo-sub {
+    font-size: 15px;
+    color: var(--muted);
+    margin-top: 12px;
+    font-style: italic;
+    font-weight: 300;
+  }
+
+  .variant-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    width: 100%;
+    max-width: 580px;
+  }
+
+  .variant-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px 20px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .variant-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 60%, rgba(232,197,71,0.07));
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+  .variant-card:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 12px 40px rgba(232,197,71,0.12); }
+  .variant-card:hover::before { opacity: 1; }
+
+  .variant-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 48px;
+    font-weight: 900;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 8px;
+    opacity: 0.9;
+  }
+  .variant-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .variant-range {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 6px;
+    font-style: italic;
+  }
+
+  .info-bar {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .info-bar span::before { content: '◆ '; color: var(--accent); font-size: 8px; }
+
+  /* ── QUIZ SCREEN ── */
+  #quiz { display: none; flex-direction: column; align-items: center; padding: 20px; gap: 0; }
+
+  .quiz-header {
+    width: 100%;
+    max-width: 780px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 0 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .quiz-variant-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    background: rgba(232,197,71,0.1);
+    border: 1px solid rgba(232,197,71,0.3);
+    padding: 6px 14px;
+    border-radius: 40px;
+  }
+  .quiz-progress-text {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .btn-back {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    background: none;
+    border: 1px solid var(--border);
+    padding: 6px 14px;
+    border-radius: 40px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-back:hover { color: var(--text); border-color: var(--muted); }
+
+  .progress-bar {
+    width: 100%;
+    max-width: 780px;
+    height: 3px;
+    background: var(--border);
+    border-radius: 3px;
+    margin-bottom: 40px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 3px;
+    transition: width 0.4s ease;
+  }
+
+  .question-card {
+    width: 100%;
+    max-width: 780px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 36px 40px;
+    margin-bottom: 20px;
+    animation: fadeUp 0.35s ease;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .q-number {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: block;
+  }
+  .q-text {
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 1.65;
+    color: var(--text);
+    margin-bottom: 32px;
+  }
+
+  .options-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .option-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 20px;
+    text-align: left;
+    cursor: pointer;
+    font-family: 'Source Serif 4', serif;
+    font-size: 15px;
+    color: var(--text);
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    transition: all 0.2s ease;
+    line-height: 1.5;
+  }
+  .option-btn:hover:not(:disabled) {
+    border-color: var(--accent2);
+    background: rgba(91,138,240,0.07);
+    transform: translateX(3px);
+  }
+  .option-letter {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 8px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+  }
+  .option-btn.correct { border-color: var(--correct); background: rgba(76,175,125,0.1); }
+  .option-btn.correct .option-letter { color: var(--correct); border-color: var(--correct); background: rgba(76,175,125,0.15); }
+  .option-btn.wrong { border-color: var(--wrong); background: rgba(224,92,122,0.1); }
+  .option-btn.wrong .option-letter { color: var(--wrong); border-color: var(--wrong); background: rgba(224,92,122,0.15); }
+  .option-btn:disabled { cursor: default; }
+
+  .feedback-box {
+    margin-top: 16px;
+    padding: 16px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    line-height: 1.6;
+    display: none;
+    animation: fadeUp 0.25s ease;
+  }
+  .feedback-box.show { display: block; }
+  .feedback-box.correct-fb { background: rgba(76,175,125,0.12); border: 1px solid rgba(76,175,125,0.3); color: #8de0b6; }
+  .feedback-box.wrong-fb { background: rgba(224,92,122,0.1); border: 1px solid rgba(224,92,122,0.25); color: #f0a0b4; }
+  .feedback-box strong { display: block; margin-bottom: 6px; }
+
+  .next-btn {
+    margin-top: 24px;
+    display: none;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    padding: 14px 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+    align-self: flex-end;
+  }
+  .next-btn:hover { background: #f5d86a; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(232,197,71,0.3); }
+  .next-btn.show { display: block; }
+
+  /* ── RESULT SCREEN ── */
+  #result { display: none; gap: 32px; }
+
+  .result-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 48px 40px;
+    text-align: center;
+    max-width: 560px;
+    width: 100%;
+  }
+  .result-score {
+    font-family: 'Playfair Display', serif;
+    font-size: 80px;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .result-score.great { color: var(--correct); }
+  .result-score.ok { color: var(--accent); }
+  .result-score.low { color: var(--wrong); }
+  .result-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  .result-msg {
+    font-size: 16px;
+    color: var(--muted);
+    font-style: italic;
+    font-weight: 300;
+    line-height: 1.6;
+    margin-bottom: 32px;
+  }
+  .result-stats {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    margin-bottom: 32px;
+  }
+  .stat { text-align: center; }
+  .stat-num { font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 700; }
+  .stat-num.c { color: var(--correct); }
+  .stat-num.w { color: var(--wrong); }
+  .stat-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+
+  .btn-group { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+  .btn-primary {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    padding: 14px 28px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+  .btn-primary:hover { background: #f5d86a; }
+  .btn-secondary {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    background: none;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 14px 28px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--muted); color: var(--text); }
+
+  @media (max-width: 600px) {
+    .variant-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+    .question-card { padding: 24px 20px; }
+    .q-text { font-size: 16px; }
+    .quiz-header { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LANDING -->
+<div class="screen" id="landing">
+  <div class="logo-area">
+    <span class="logo-tag">Buxoro DTU · 2026</span>
+    <div class="logo-title">DKA TEST</div>
+    <div class="logo-sub">Davlat Kadastrlari Asoslari · 101 savol</div>
+  </div>
+
+  <div class="variant-grid" id="variantGrid">
+    <!-- cards injected by JS -->
+  </div>
+
+  <div class="info-bar">
+    <span>Har variant: 25–26 ta savol</span>
+    <span>Savollar aralashtirilgan</span>
+    <span>4 ta variant</span>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div class="screen" id="quiz">
+  <div class="quiz-header">
+    <button class="btn-back" onclick="goHome()">← Bosh sahifa</button>
+    <span class="quiz-variant-badge" id="variantBadge">VARIANT 1</span>
+    <span class="quiz-progress-text" id="progressText">1 / 25</span>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+  <div class="question-card" id="questionCard">
+    <span class="q-number" id="qNumber">SAVOL 01</span>
+    <div class="q-text" id="qText"></div>
+    <div class="options-list" id="optionsList"></div>
+    <div class="feedback-box" id="feedbackBox"></div>
+  </div>
+  <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Keyingi savol →</button>
+</div>
+
+<!-- RESULT -->
+<div class="screen" id="result">
+  <div class="result-card">
+    <div class="result-score" id="resultScore"></div>
+    <div class="result-label">ball / <span id="totalQ"></span></div>
+    <div class="result-msg" id="resultMsg"></div>
+    <div class="result-stats">
+      <div class="stat"><div class="stat-num c" id="correctCount"></div><div class="stat-label">To'g'ri</div></div>
+      <div class="stat"><div class="stat-num w" id="wrongCount"></div><div class="stat-label">Noto'g'ri</div></div>
+    </div>
+    <div class="btn-group">
+      <button class="btn-primary" id="retryBtn" onclick="retryVariant()">Qayta urinish</button>
+      <button class="btn-secondary" onclick="goHome()">Variant tanlash</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── ALL 101 QUESTIONS ───
+const ALL_QUESTIONS = [
+  // 1
+  { q: "Kadastr tushunchasiga ko'ra, u ko'chmas mulkka bo'lgan huquqlar to'g'risidagi yozuvlarni o'z ichiga olgan qanday tizim hisoblanadi?",
+    correct: "Zamonaviy yer axborot tizimi (modern land information system)",
+    wrong: ["Milliy geografik ma'lumotlar bazasi", "Davlat mulk reestri tizimi", "Ko'chmas mulk elektron arxivi"] },
+
+  // 2
+  { q: "Muayyan obyekt haqida davriy yoki uzluksiz kuzatish orqali tuziladigan ma'lumotlar to'plami nima deb ataladi?",
+    correct: "Kadastr",
+    wrong: ["Rejestr", "Inventarizatsiya", "Monitoring"] },
+
+  // 3
+  { q: "O'rta asrlarda Amir Temur davrida yer maydonini o'lchash va hosilni hisobga olish qaysi asarda bayon etilgan?",
+    correct: "Temur tuzuklari",
+    wrong: ["Boburnoma", "Avesto", "Qonunlar majmuasi"] },
+
+  // 4
+  { q: "Amir Temur davrida o'lchash natijalarini tekshirgan maxsus davlat xodimlari va oliy mansabdorlar hay'ati qanday atalgan?",
+    correct: "Holisa hay'ati",
+    wrong: ["Devoni oliy", "Vazirlar kengashi", "Mirob hay'ati"] },
+
+  // 5
+  { q: "O'zbekistonda hozirgi kunga qadar davlat kadastrining necha xil turi mavjud?",
+    correct: "20 ta",
+    wrong: ["10 ta", "27 ta", "15 ta"] },
+
+  // 6
+  { q: "Davlat kadastrlari yagona tizimini (DKYT) yuritish tartibi qaysi organ tomonidan belgilanadi?",
+    correct: "O'zbekiston Respublikasi Vazirlar Mahkamasi",
+    wrong: ["Prezident Administratsiyasi", "Oliy Majlis", "Kadastr agentligi"] },
+
+  // 7
+  { q: "Davlat kadastrlarini yuritishning asosiy prinsiplaridan biri qaysi yagona tizimni qo'llashni nazarda tutadi?",
+    correct: "Fazoviy koordinatalarning yagona tizimi (WGS-84)",
+    wrong: ["UTM koordinata tizimi", "SK-42 koordinata tizimi", "Gauss-Krüger tizimi"] },
+
+  // 8
+  { q: "Madaniy meros obyektlari davlat kadastrini yuritishga mas'ul tashkilot qaysi?",
+    correct: "Madaniyat va turizm vazirligi huzuridagi Madaniy meros agentligi",
+    wrong: ["O'zbekiston Badiiy akademiyasi", "Fan va texnologiyalar vazirligi", "Arxitektura va qurilish vazirligi"] },
+
+  // 9
+  { q: "O'rmon kadastrini yuritish qaysi davlat tashkilotining zimmasiga yuklatilgan?",
+    correct: "O'zbekiston Respublikasi O'rmon xo'jaligi agentligi",
+    wrong: ["Ekologiya vazirligi", "Qishloq xo'jaligi vazirligi", "Tabiatni muhofaza qilish qo'mitasi"] },
+
+  // 10
+  { q: "Avtomobil yo'llari davlat kadastrini yuritishga mas'ul bo'lgan organ qaysi?",
+    correct: "O'zbekiston Respublikasi Avtomobil yo'llari davlat qo'mitasi",
+    wrong: ["Transport vazirligi", "Kommunal xizmatlar agentligi", "Shaharsozlik qo'mitasi"] },
+
+  // 11
+  { q: "Temir yo'llar davlat kadastri qaysi tashkilot tomonidan yuritiladi?",
+    correct: "'O'zbekiston temir yo'llari' davlat-aksiyadorlik kompaniyasi",
+    wrong: ["Transport vazirligi", "Iqtisodiyot vazirligi", "Infratuzilma qo'mitasi"] },
+
+  // 12
+  { q: "Tabiiy xavf yuqori bo'lgan zonalar davlat kadastrini yuritishda seysmik holatlar bo'yicha qaysi institut mas'ul?",
+    correct: "O'zbekiston Respublikasi Fanlar akademiyasining Seysmologiya instituti",
+    wrong: ["Geologiya instituti", "Gidrologiya instituti", "Tabiiy ofatlar bo'yicha davlat qo'mitasi"] },
+
+  // 13
+  { q: "O'simlik dunyosi obyektlari davlat kadastrini yurituvchi vakolatli organ qaysi?",
+    correct: "O'zbekiston Respublikasi Ekologiya, atrof-muhitni muhofaza qilish va iqlim o'zgarishi vazirligi",
+    wrong: ["Qishloq xo'jaligi vazirligi", "O'rmon xo'jaligi agentligi", "Fan va texnologiyalar vazirligi"] },
+
+  // 14
+  { q: "Fazoviy ma'lumotlar to'g'risidagi O'zbekiston Respublikasi Qonuni qachon qabul qilingan?",
+    correct: "2021-yil 23-iyul (O'RQ-702)",
+    wrong: ["2018-yil 15-may", "2019-yil 30-dekabr", "2020-yil 1-yanvar"] },
+
+  // 15
+  { q: "Milliy geografik axborot tizimi fazoviy ma'lumotlar milliy infratuzilmasining qanday tizimi hisoblanadi?",
+    correct: "Tarkibiy qismi (avtomatlashtirilgan tizim)",
+    wrong: ["Mustaqil tizimi", "Rahbar organi", "Moliyalashtiruvchi tizimi"] },
+
+  // 16
+  { q: "Fazoviy ma'lumotlar milliy infratuzilmasini yuritishda moliyalashtirish manbai qaysi?",
+    correct: "O'zbekiston Respublikasi Davlat byudjetidan ajratilgan mablag'lar",
+    wrong: ["Xalqaro tashkilotlar granti", "Mahalliy hokimiyat byudjeti", "Xususiy investitsiyalar"] },
+
+  // 17
+  { q: "Fazoviy ma'lumotlar sohasidagi maxsus vakolatli davlat organi qaysi?",
+    correct: "Kadastr agentligi (Iqtisodiyot va moliya vazirligi huzuridagi)",
+    wrong: ["Statistika agentligi", "Davlat arxivi", "Geodeziya va kartografiya markazi"] },
+
+  // 18
+  { q: "Fazoviy ma'lumotlar milliy infratuzilmasi administratori ishonchsiz ma'lumotlarni necha ish kunida e'lon qilishi kerak?",
+    correct: "Uch ish kuni mobaynida",
+    wrong: ["Bir ish kuni ichida", "Besh ish kuni ichida", "O'n ish kuni ichida"] },
+
+  // 19
+  { q: "Fazoviy ma'lumotlar ishlab chiqaruvchilari yaratilgan ma'lumotlarni necha kun ichida administratorga taqdim etishi shart?",
+    correct: "15 (o'n besh) kun muddatida",
+    wrong: ["7 kun muddatida", "30 kun muddatida", "45 kun muddatida"] },
+
+  // 20
+  { q: "Davlat yer kadastri ma'lumotlari qanday ikki turga bo'linadi?",
+    correct: "Asosiy (birlamchi) va joriy ma'lumotlarga",
+    wrong: ["Raqamli va qog'oz ma'lumotlarga", "Ochiq va maxfiy ma'lumotlarga", "Doimiy va vaqtinchalik ma'lumotlarga"] },
+
+  // 21
+  { q: "Qishloq xo'jaligi yerlari unumdorligini baholashda qanday ko'rsatkichdan foydalaniladi?",
+    correct: "Tuproq boniteti (tuproq bonitirovkasi)",
+    wrong: ["Yer kadastri raqami", "Yer maydonining koeffitsienti", "Yer rentabelligi indeksi"] },
+
+  // 22
+  { q: "Yer uchastkalari bo'yicha yer miqdorini hisobga olishning qanday usullari mavjud?",
+    correct: "Geodezik usul va kartometrik usul",
+    wrong: ["Fotogrammetrik va aerosuratga olish usullari", "Lidar va radar usullari", "Raqamli va analog usullar"] },
+
+  // 23
+  { q: "Tuproq bonitirovkasi necha balli shkala bo'yicha o'tkaziladi?",
+    correct: "100 (yuz) balli shkala bo'yicha",
+    wrong: ["10 balli shkala bo'yicha", "50 balli shkala bo'yicha", "200 balli shkala bo'yicha"] },
+
+  // 24
+  { q: "Kadastr uchun suratga olishning qanday asosiy uslublari mavjud?",
+    correct: "Aerofotogeodezik va yer ustida bajariladigan (yer-geodezik) uslublar",
+    wrong: ["Termal va ultrabinafsha uslublar", "Gidrologik va geologik uslublar", "Lazer va infraqizil uslublar"] },
+
+  // 25
+  { q: "Davlat yer kadastrini yuritish borasidagi ishlar qanday mablag'lar hisobidan moliyalanadi?",
+    correct: "O'zbekiston Respublikasi Davlat byudjetidan va huquqlarni ro'yxatdan o'tkazganlik uchun undiriladigan mablag'lardan",
+    wrong: ["Faqat xususiy investitsiyalardan", "Xalqaro grantlar hisobidan", "Mahalliy hokimiyat byudjetidan"] },
+
+  // 26
+  { q: "O'zbekistonda suv resurslari kimning mulki hisoblanadi?",
+    correct: "Davlat mulki — umummilliy boylik",
+    wrong: ["Viloyat hokimliklarining mulki", "Suv xo'jaligi tashkilotlarining mulki", "Qishloq jamoalarining mulki"] },
+
+  // 27
+  { q: "Davlat suv kadastri ma'lumotlari davlat hokimiyati organlariga qanday asosda taqdim etiladi?",
+    correct: "Bepul (tekinga) taqdim etiladi",
+    wrong: ["Belgilangan to'lov evaziga", "Shartnoma asosida", "Faqat vakolatli organlarga to'lovli"] },
+
+  // 28
+  { q: "Davlat suv kadastrining 'Yer usti suvlari' bo'limini yurituvchi organ qaysi?",
+    correct: "O'zbekiston Respublikasi Gidrometeorologiya xizmati agentligi (O'zgidromet)",
+    wrong: ["Suv xo'jaligi vazirligi", "Ekologiya vazirligi", "Qishloq xo'jaligi vazirligi"] },
+
+  // 29
+  { q: "'Yer osti suvlari' bo'limi bo'yicha davlat suv kadastrini kim yuritadi?",
+    correct: "Tog'-kon sanoati va geologiya vazirligi",
+    wrong: ["Ekologiya vazirligi", "Suv xo'jaligi vazirligi", "Energetika vazirligi"] },
+
+  // 30
+  { q: "Ichimlik va oqova suvlar bo'yicha davlat suv kadastrini yurituvchi vazirlik qaysi?",
+    correct: "Suv xo'jaligi vazirligi",
+    wrong: ["Sog'liqni saqlash vazirligi", "Kommunal xizmatlar vazirligi", "Shahar qurilish vazirligi"] },
+
+  // 31
+  { q: "Daryolar, ko'llar va muzliklar qaysi kadastr turiga kiradi?",
+    correct: "Davlat suv kadastri ('Yer usti suvlari' bo'limi)",
+    wrong: ["Davlat yer kadastri", "Tabiiy hududlar kadastri", "Ekologik monitoring kadastri"] },
+
+  // 32
+  { q: "Davlat suv kadastri necha bo'limdan iborat?",
+    correct: "To'rt bo'limdan: Yer usti suvlari, Yer osti suvlari, Suvdan foydalanish, Ichimlik va oqova suvlar",
+    wrong: ["Ikki bo'limdan: yer usti va yer osti suvlari", "Uch bo'limdan: daryo, ko'l, suv ombori", "Besh bo'limdan"] },
+
+  // 33
+  { q: "Hayvonot dunyosi yashaydigan muhit hududi necha yilda bir marta kadastr tekshiruvidan o'tkaziladi?",
+    correct: "Besh (5) yilda bir marta",
+    wrong: ["Ikki yilda bir marta", "O'n yilda bir marta", "Har yili"] },
+
+  // 34
+  { q: "Hayvonot dunyosidan foydalanuvchi yuridik shaxslar ro'yxati har yili qaysi sanagacha shakllantiriladi?",
+    correct: "1-noyabrdan kechiktirmasdan",
+    wrong: ["1-yanvardan kechiktirmasdan", "1-iyuldan kechiktirmasdan", "31-dekabrgacha"] },
+
+  // 35
+  { q: "Hayvonot dunyosi obyektlarining davlat kadastrini yuritishda iqtisodiy baholashni kim amalga oshiradi?",
+    correct: "Ekologiya, atrof-muhitni muhofaza qilish va iqlim o'zgarishi vazirligining kadastr xizmati",
+    wrong: ["Moliya vazirligi", "Iqtisodiyot vazirligi", "Statistika qo'mitasi"] },
+
+  // 36
+  { q: "O'simlik dunyosi obyektlari o'sadigan muhit hududi necha yilda bir marta tekshiriladi?",
+    correct: "Besh (5) yilda bir marta",
+    wrong: ["Uch yilda bir marta", "Yetti yilda bir marta", "Har yili majburiy"] },
+
+  // 37
+  { q: "Avtomobil yo'llari davlat kadastri qaysi tizimning tarkibiy qismi hisoblanadi?",
+    correct: "Davlat kadastrlari yagona tizimi (DKYT)",
+    wrong: ["Transport axborot tizimi", "Milliy infratuzilma tizimi", "Hududiy rejalashtirish tizimi"] },
+
+  // 38
+  { q: "Avtomobil yo'llari davlat kadastrini yuritishning asosiy prinsiplaridan biri nima?",
+    correct: "Respublika hududidagi barcha avtomobil yo'llari obyektlarini to'liq qamrab olish",
+    wrong: ["Faqat asosiy magistral yo'llarni hisobga olish", "Faqat yangi qurilgan yo'llarni ro'yxatga olish", "Yo'llarni toifaga qarab tanlash"] },
+
+  // 39
+  { q: "Avtomobil yo'llari kadastrini yuritish qanday manbalarda amalga oshiriladi?",
+    correct: "Qog'oz va/yoki elektron manbalarda",
+    wrong: ["Faqat qog'oz manbalarda", "Faqat elektron (raqamli) manbalarda", "Faqat GIS tizimlarida"] },
+
+  // 40
+  { q: "Temir yo'llar davlat kadastri obyektlariga nimalar kiradi?",
+    correct: "Mavjud va qurilayotgan temir yo'llar, stansiyalar, ko'priklar, tunnellar, depolar",
+    wrong: ["Faqat temir yo'l izlari va stansiyalar", "Faqat yo'lovchi tashish infratuzilmasi", "Faqat metall konstruktsiyalar"] },
+
+  // 41
+  { q: "Temir yo'llar davlat kadastrini yuritishni moliyalashtirish kim tomonidan amalga oshiriladi?",
+    correct: "'O'zbekiston temir yo'llari' davlat-aksiyadorlik kompaniyasi mablag'lari hisobiga",
+    wrong: ["Davlat byudjeti hisobidan", "Transport vazirligi mablag'laridan", "Xalqaro investitsiyalar hisobidan"] },
+
+  // 42
+  { q: "Fuqarolik Kodeksiga ko'ra bino va inshootlar qanday mulk hisoblanadi?",
+    correct: "Ko'chmas mulk (FK 83-modda 2-qismi)",
+    wrong: ["Ko'char mulk", "Davlat mulki", "Umumiy foydalanishdagi mulk"] },
+
+  // 43
+  { q: "O'zbekiston Respublikasi Fuqarolik Kodeksiga asosan ko'p yillik dov-daraxtlar nima deb hisoblanadi?",
+    correct: "Ko'chmas mulk (FK 83-modda 2-qismi)",
+    wrong: ["Ko'char mulk", "Biologik resurs", "Qishloq xo'jaligi aktivlari"] },
+
+  // 44
+  { q: "Ko'chmas mulk bozorining asosiy segmentlaridan birini ayting?",
+    correct: "Yer bozori, turar-joy bozori, noturar-joy (tijorat/sanoat) bozori",
+    wrong: ["Faqat shaharlik ko'chmas mulk bozori", "Faqat yer va bino bozori", "Faqat yangi qurilish bozori"] },
+
+  // 45
+  { q: "Ko'chmas mulk bozorining o'ziga xos xususiyatlaridan biri nima?",
+    correct: "Mahalliylik (lokallik), obyektlar o'zaro almashuvchanligining pastligi",
+    wrong: ["Yuqori likvidlilik va tez aylanma", "Global bozorda erkin aylanma", "Narx barqarorligi"] },
+
+  // 46
+  { q: "Ko'chmas mulk manzillari yagona reestrini yuritish ustidan nazoratni kim amalga oshiradi?",
+    correct: "Iqtisodiyot va moliya vazirligi huzuridagi Kadastr agentligi",
+    wrong: ["Ichki ishlar vazirligi", "Soliq qo'mitasi mustaqil ravishda", "Mahalliy hokimiyat organlari"] },
+
+  // 47
+  { q: "Manzillarni belgilashda foydalaniladigan 'geokod' nima?",
+    correct: "Ko'chmas mulk obyektini koordinatalar yordamida geografik bog'lash uchun mo'ljallangan, X va Y koordinatalaridan iborat kod",
+    wrong: ["Bino raqami va ko'cha nomi kombinatsiyasi", "Pochta indeksi va viloyat kodi", "GPS qurilmasining identifikatsiya raqami"] },
+
+  // 48
+  { q: "Bino va inshootlarning texnik holatini aniqlash nima bilan bir vaqtda amalga oshiriladi?",
+    correct: "Texnik inventarizatsiya bilan bir vaqtda",
+    wrong: ["Huquqiy ekspertiza bilan bir vaqtda", "Yer uchastka o'lchovi bilan bir vaqtda", "Soliq tekshiruvi bilan bir vaqtda"] },
+
+  // 49
+  { q: "Jismoniy eskirish deganda bino qurilishida ishlatilgan materiallarning nima bo'lishi tushuniladi?",
+    correct: "Materiallarning eskirib, dastlabki sifat va texnik ko'rsatkichlarini yo'qotishi",
+    wrong: ["Binoning estetik ko'rinishining o'zgarishi", "Bino qiymatining bozorda pasayishi", "Qurilish me'yorlaridan og'ish"] },
+
+  // 50
+  { q: "Yerni baholash jarayoni qaysi ma'lumotlarga asoslanadi?",
+    correct: "Davlat yer kadastri ma'lumotlariga",
+    wrong: ["Faqat bozor narxlari ma'lumotlariga", "Soliq ma'lumotlar bazasiga", "Bank baholash hisobotlariga"] },
+
+  // 51
+  { q: "Yerni baholashda 'ayirboshlash qiymati' nima?",
+    correct: "Bozor qiymati — erkin, xabardor va majbursiz tomonlar o'rtasidagi bitimda ehtimoliy narx",
+    wrong: ["Kadastr qiymati — davlat tomonidan belgilangan narx", "Sug'urta qiymati — yo'qotishlarga nisbatan baho", "Likvidatsiya qiymati — shoshilinch sotish narxi"] },
+
+  // 52
+  { q: "O'zbekiston Respublikasining 'Davlat kadastrlari to'g'risida'gi Qonuni necha moddadan iborat?",
+    correct: "18 (o'n sakkiz) moddadan",
+    wrong: ["12 moddadan", "25 moddadan", "91 moddadan"] },
+
+  // 53
+  { q: "Kadastr obyektiga bo'lgan huquqni tasdiqlovchi asosiy hujjatlardan birini ayting?",
+    correct: "Davlat akti, oldi-sotdi/ijara/hadya/meros shartnomalari, mulk huquqining davlat ro'yxatidan o'tganlik to'g'risidagi guvohnoma",
+    wrong: ["Faqat bank hisoboti va notarial hujjat", "Fuqarolik pasporti va yashash ro'yxatdan o'tish", "Soliq to'lash kvitansiyasi"] },
+
+  // 54
+  { q: "O'zbekiston Respublikasi 'Yer kodeksi' necha moddadan iborat?",
+    correct: "14 bob, 91 moddadan iborat (1998-yil 30-aprel)",
+    wrong: ["10 bob, 60 moddadan", "18 bob, 120 moddadan", "8 bob, 45 moddadan"] },
+
+  // 55
+  { q: "Yer uchastkasiga bo'lgan huquqlarni davlat ro'yxatiga olish rad etilishi mumkinmi?",
+    correct: "Ha, mumkin — nizo yoki qonunda ko'rsatilgan asoslar bo'lganda",
+    wrong: ["Yo'q, rad etish mumkin emas", "Faqat sudning buyrug'i bilan rad etiladi", "Faqat chet el fuqarolari uchun rad etilishi mumkin"] },
+
+  // 56
+  { q: "Kadastr raqamining birinchi ikki raqami nimani bildiradi?",
+    correct: "Qoraqalpog'iston Respublikasi yoki tegishli viloyat (Toshkent shahri) kodi",
+    wrong: ["Kadastr zonasi raqami", "Yer uchastkasining turi kodi", "Ro'yxatdan o'tkazilgan yil"] },
+
+  // 57
+  { q: "Kadastr raqamidagi 'FFFF' qismi nimani anglatadi?",
+    correct: "Yer uchastkasining tartib raqami (kadastr mavzesi/massiv ichidagi navbatchi indeks)",
+    wrong: ["Foydalanish maqsadi kodi", "Faylning arxiv raqami", "Fermer xo'jaligi raqami"] },
+
+  // 58
+  { q: "Davlat yer kadastrining 'Yer uchastkalari' tematik qatlami nimalarni o'z ichiga oladi?",
+    correct: "Yer uchastkalari chegaralari, kadastr raqamlari, yer egalari, maydon, foydalanish maqsadi, sifat va qiymat bahosi",
+    wrong: ["Faqat yer uchastka raqamlari va maydonlari", "Faqat mulkdorlar ro'yxati va manzillari", "Faqat soliq ma'lumotlari va baho"] },
+
+  // 59
+  { q: "Kadastr obyektining geografik va ma'muriy holati qaysi hujjatda aks etadi?",
+    correct: "Kadastr pasporti (yig'majildi) va kadastr xaritasida (rejasida)",
+    wrong: ["Faqat yer uchastka guvohnomasi", "Faqat topografik xaritada", "Faqat davlat aktida"] },
+
+  // 60
+  { q: "Konlar va foydali qazilmalar kadastri necha turga bo'linadi?",
+    correct: "2 (ikki) turga: asosiy (birlamchi) va joriy (kundalik)",
+    wrong: ["3 turga: asosiy, joriy va arxiv", "4 turga: turli foydali qazilma turlari bo'yicha", "5 turga: mintaqaviy asosda"] },
+
+  // 61
+  { q: "Muhofaza etiladigan tabiiy hududlar necha toifaga bo'linadi?",
+    correct: "7 (yetti) toifa",
+    wrong: ["4 toifa", "5 toifa", "10 toifa"] },
+
+  // 62
+  { q: "Davlat qo'riqxonalari hududida qanday faoliyatga ruxsat etiladi?",
+    correct: "Faqat ilmiy-tadqiqot faoliyati, atrof tabiiy muhit monitoringi va yong'inga qarshi tadbirlar",
+    wrong: ["Cheklangan turizm va ekskursiyalar", "Nazorat ostida chorvachilik", "Ilmiy ov va baliq ovlash"] },
+
+  // 63
+  { q: "Kurort tabiiy hududlar necha zonaga bo'linadi?",
+    correct: "3 (uch) zonaga",
+    wrong: ["2 zonaga", "4 zonaga", "5 zonaga"] },
+
+  // 64
+  { q: "Gidrometerologiya hodisalari xavfi yuqori bo'lgan zonalarga nimalar kiradi?",
+    correct: "Suv toshqinlari, sellar, qor ko'chkilari, kuchli shamollar, jalalar, qurg'oqchilik tarqaladigan hududlar",
+    wrong: ["Faqat zilzila va vulqon xavfli hududlar", "Faqat sanoat chiqindilari tarqaladigan zonalar", "Faqat qurg'oqchilik va cho'llanish zonalari"] },
+
+  // 65
+  { q: "Texnogen xavf yuqori bo'lgan zonalar kadastri nimani baholash uchun yuritiladi?",
+    correct: "Kadastr obyektlarini hisobga olish, holatini va xavfli texnogen hodisalar oqibatlarini baholash",
+    wrong: ["Sanoat korxonalarining ekologik ta'sirini baholash", "Ishlab chiqarish samaradorligini o'lchash", "Transport infratuzilmasini rejalashtirish"] },
+
+  // 66
+  { q: "Aloqa obyektlari davlat kadastrini yuritishning asosiy prinsipi nima?",
+    correct: "Respublika hududidagi barcha aloqa obyektlarini qamrab olish va WGS-84 koordinata tizimini qo'llash",
+    wrong: ["Faqat telefon tarmoqlarini ro'yxatga olish", "Internet tarmoqlari xaritasini tuzish", "Mobil aloqa stansiyalarini monitoring qilish"] },
+
+  // 67
+  { q: "Energetika obyektlari davlat kadastriga nimalar kiradi?",
+    correct: "Gidravlik va issiqlik elektr stansiyalari, elektr tarmoqlari, yordamchi stansiyalar",
+    wrong: ["Faqat gidravlik elektr stansiyalari", "Faqat issiqlik manbalari va qozonxonalar", "Faqat yadroviy energetika obyektlari"] },
+
+  // 68
+  { q: "Yer uchastkasini s'yomka qilishda qanday hujjat tuziladi?",
+    correct: "Abris — yer uchastkasi va undagi binolar/inshootlar konturlari ko'rsatilgan masshtabsiz dastlabki chizma",
+    wrong: ["Topografik xarita — masshtabli aniq xarita", "Kadastr pasporti — to'liq hujjatlar to'plami", "Geodezik hisobot — o'lchovlar jadvali"] },
+
+  // 69
+  { q: "Kadastr axborotining ishonchliligi va ochiqligi qanday tamoyil hisoblanadi?",
+    correct: "DKYT yuritishning fundamental (asosiy) tamoyili",
+    wrong: ["Ixtiyoriy (tavsiyaviy) tamoyil", "Faqat davlat organlariga tegishli qoida", "Maxfiylik bilan muvozanatlashtirilgan tamoyil"] },
+
+  // 70
+  { q: "Qaysi vazirlik bino va inshootlar kadastriga oid minimal talablarni ishlab chiqadi?",
+    correct: "Iqtisodiyot va moliya vazirligi huzuridagi Kadastr agentligi",
+    wrong: ["Arxitektura va qurilish vazirligi", "Moliya vazirligi mustaqil ravishda", "Shahar qurilishi inspeksiyasi"] },
+
+  // 71
+  { q: "'LADM' xalqaro standarti qanday ma'lumotlarni birlashtirishga xizmat qiladi?",
+    correct: "Kadastr, baholash va huquqiy registrlar ma'lumotlarini fazoviy ma'lumotlar bilan birlashtirish (ISO 19152)",
+    wrong: ["Faqat yer kadastri ma'lumotlarini standartlashtirish", "Xalqaro yer bozori narxlarini uyg'unlashtirish", "Davlatlar o'rtasida kadastr ma'lumotlarini almashish"] },
+
+  // 72
+  { q: "Yerni muntazam qayta baholash nima uchun zarur?",
+    correct: "Bozor narxlarining o'zgarishi sababli 'qiymat drift'ini oldini olish uchun",
+    wrong: ["Faqat soliq daromadlarini oshirish uchun", "Kadastr xizmati uchun ish yaratish maqsadida", "Faqat yangi qurish loyihalarini baholash uchun"] },
+
+  // 73
+  { q: "Jamoat ehtiyoji uchun yer olib qo'yilganda kompensatsiya qanday aniqlanadi?",
+    correct: "Bozor qiymati tamoyili asosida, mustaqil baholash natijalariga ko'ra",
+    wrong: ["Kadastr qiymati asosida davlat belgilagan tartibda", "Mahalliy hokimiyat hisoboti asosida", "Faqat qurilish xarajatlari asosida"] },
+
+  // 74
+  { q: "Ko'chmas mulkka investitsiya qilishdan keladigan daromad qanday shaklda bo'ladi?",
+    correct: "Obyekt qiymatining o'sishi, ijara daromadi va qayta sotishdan keladigan daromad",
+    wrong: ["Faqat ijara to'lovlari ko'rinishida", "Faqat davlat subsidiyalari shaklida", "Faqat soliq imtiyozlari ko'rinishida"] },
+
+  // 75
+  { q: "'UNICON.UZ' markazi qaysi kadastrni yuritishda ishtirok etadi?",
+    correct: "Aloqa obyektlari davlat kadastri",
+    wrong: ["Energetika obyektlari kadastri", "Temir yo'llar davlat kadastri", "Ko'chmas mulk kadastri"] },
+
+  // 76
+  { q: "O'zbekistonda yer fondi necha toifaga bo'linadi?",
+    correct: "8 (sakkiz) toifaga",
+    wrong: ["5 toifaga", "6 toifaga", "10 toifaga"] },
+
+  // 77
+  { q: "Zilzilalar epitsentrlari va seysmik stansiyalar qaysi kadastrga kiritiladi?",
+    correct: "Tabiiy xavf yuqori bo'lgan zonalar davlat kadastri (seysmik xavf bo'limi)",
+    wrong: ["Davlat yer kadastri", "Muhofaza etiladigan tabiiy hududlar kadastri", "Geologiya va konlar kadastri"] },
+
+  // 78
+  { q: "Yer uchastkalariga bo'lgan huquq qachon vujudga keladi?",
+    correct: "Davlat ro'yxatidan o'tkazilganidan keyin — ariza kelib tushganidan 2 kun ichida",
+    wrong: ["Shartnoma imzolangan paytdan boshlab", "Hokim qarori chiqarilganidan so'ng", "To'lov amalga oshirilganidan keyin"] },
+
+  // 79
+  { q: "Yer kadastriga doir axborot tizimi qanday vazifani bajaradi?",
+    correct: "Yer uchastkalari to'g'risida ma'lumotlarni yig'ish, saqlash, tahlil qilish, yangilash va taqdim etish",
+    wrong: ["Faqat yer uchastka narxlarini belgilash", "Faqat yer nizolarini hal qilish", "Faqat soliq hisoblash"] },
+
+  // 80
+  { q: "O'zbekistonda yerga bo'lgan mulkchilik qanday shaklda?",
+    correct: "Davlat mulki (Yer kodeksining 16-moddasiga asosan)",
+    wrong: ["Xususiy mulk (fuqarolar mulki)", "Aralash mulk (davlat va xususiy)", "Kommunal mulk (mahalliy hokimiyat mulki)"] },
+
+  // 81
+  { q: "Ko'p kvartirali uylarning har bir xonadoni kadastrda qanday hisobga olinadi?",
+    correct: "Alohida ajratilgan xona (alohida ko'chmas mulk obyekti) sifatida",
+    wrong: ["Umumiy binoning bir qismi sifatida bitta raqam ostida", "Faqat umumiy maydon ko'rsatkichi orqali", "Tumanlik uy-joy fondi tarkibida"] },
+
+  // 82
+  { q: "'Servitut' nima degani?",
+    correct: "O'zganing yer uchastkasidan cheklangan tarzda foydalanish huquqi (YK 30-modda)",
+    wrong: ["Yer uchastkasini to'liq sotib olish huquqi", "Yer ijarasi shartnomasining bir turi", "Yer uchastka chegarasini o'zgartirish talabi"] },
+
+  // 83
+  { q: "'Abris' so'zining ma'nosi kadastrda nimani bildiradi?",
+    correct: "Yer uchastkasi va undagi binolar/inshootlar chegaralari naturada chizib olinadigan masshtabsiz dastlabki chizma",
+    wrong: ["Kadastr ma'lumotlari bazasi bo'limi", "Yer uchastkasi mulk guvohnomasi", "Topografik xarita uchun asosiy relyef chizmasi"] },
+
+  // 84
+  { q: "Kadastr raqamidagi 'SS' harflari nimani bildiradi?",
+    correct: "Sektor (kadastr zonasi) yoki tuman ichidagi sektor kodi",
+    wrong: ["Sertifikat seriyasi raqami", "Soliq stavkasi kategoriyasi", "Suv ta'minoti zonasi kodi"] },
+
+  // 85
+  { q: "Hayvonot dunyosi obyektlarining davlat kadastrida baliqlar qanday hisobga olinadi?",
+    correct: "Alohida 'Ovlanadigan baliqlar turlari' shakli (4-shakl) asosida",
+    wrong: ["Suv havzalari kadastrining umumiy ro'yxatida", "Biologik resurslar umumiy hisobotida", "Ekologiya monitoring tizimida"] },
+
+  // 86
+  { q: "O'simlik dunyosi kadastrida 'kamyob turlar' qayerdan olinadi?",
+    correct: "O'zbekiston Respublikasining Qizil kitobiga kiritilgan turlar ro'yxatidan",
+    wrong: ["Xalqaro IUCN Qizil ro'yxatidan faqat", "Botanika institutining mahalliy kuzatuvlaridan", "Qishloq xo'jaligi vazirligi ma'lumotlaridan"] },
+
+  // 87
+  { q: "Elektr uzatish tarmoqlari qaysi kadastr turiga kiradi?",
+    correct: "Energetika obyektlari davlat kadastri",
+    wrong: ["Aloqa obyektlari davlat kadastri", "Sanoat infratuzilmasi kadastri", "Kommunal xizmatlar kadastri"] },
+
+  // 88
+  { q: "Gaz taqsimlash punktlari qaysi kadastr tarkibida hisobga olinadi?",
+    correct: "Yetkazib berish quvurlari davlat kadastri",
+    wrong: ["Energetika obyektlari davlat kadastri", "Aloqa va kommunikatsiya kadastri", "Sanoat korxonalari kadastri"] },
+
+  // 89
+  { q: "Yer uchastkasining chegarasini joyida belgilash kim tomonidan amalga oshiriladi?",
+    correct: "Yer tuzuvchi mutaxassis (geodezik mutaxassis) tomonidan, yer tuzish qatnashchilari ishtirokida",
+    wrong: ["Mahalliy hokimiyat vakili tomonidan yolg'iz", "Kadastr agentligi xodimi va soliq inspektori birgalikda", "Mulkdor o'zi tomonidan mustaqil ravishda"] },
+
+  // 90
+  { q: "Yer uchastkalari va binolarni rejaviy texnik inventarizatsiyalash kamida qancha vaqtda bir marta o'tkaziladi?",
+    correct: "Kamida har 5 yilda bir marta",
+    wrong: ["Kamida har 2 yilda bir marta", "Kamida har 10 yilda bir marta", "Kamida har 3 yilda bir marta"] },
+
+  // 91
+  { q: "'Mass Appraisal' usuli nima uchun ishlatiladi?",
+    correct: "Soliq maqsadlari uchun ko'p sonli obyektlarni bir vaqtda ommaviy baholash (IAAO standartiga muvofiq)",
+    wrong: ["Bitta noyob obyektni chuqur individual baholash", "Ko'chmas mulk bozorini prognozlash", "Kredit risklarini baholash"] },
+
+  // 92
+  { q: "O'zbekistonda foydali qazilma konlari pasportini kim tasdiqlaydi?",
+    correct: "Tog'-kon sanoati va geologiya vazirligi huzuridagi Davlat geologik fondi",
+    wrong: ["Iqtisodiyot vazirligi", "Kadastr agentligi", "Ekologiya vazirligi"] },
+
+  // 93
+  { q: "Kadastr tizimida 'yagona metodologiya' prinsipi nima uchun kerak?",
+    correct: "Barcha obyektlar bo'yicha kadastr axborotlarini bir xilda shakllantirish, taqqoslash va integratsiya qilish imkonini berish",
+    wrong: ["Kadastr xodimlarini bir xil tayyorlash", "Bir xil soliq stavkasini qo'llash", "Faqat xalqaro standartlarga moslashtirish"] },
+
+  // 94
+  { q: "O'zbekistonda temir yo'llarning umumiy uzunligi qaysi kadastrda ko'rsatiladi?",
+    correct: "Temir yo'llar davlat kadastri",
+    wrong: ["Davlat yer kadastri", "Transport va aloqa kadastri", "Chiziqli infratuzilma reestri"] },
+
+  // 95
+  { q: "Bino va inshootlar kadastrida 'inventar yig'majild' nima?",
+    correct: "Bino/inshoot bo'yicha texnik inventarizatsiya hujjatlari to'plami (abris, plan, eksplikatsiya, jismoniy eskirish bahosi)",
+    wrong: ["Faqat mulkdorlar ro'yxati va ularning hujjatlari", "Faqat bino qurilishi loyiha hujjatlari", "Faqat soliq hisobotlari va to'lov kvitansiyalari"] },
+
+  // 96
+  { q: "O'zbekistonda seysmik zonalarni xaritalash bilan kim shug'ullanadi?",
+    correct: "O'zbekiston Respublikasi Fanlar akademiyasining Seysmologiya instituti",
+    wrong: ["Qurilish va arxitektura vazirligi", "Favqulodda vaziyatlar vazirligi", "Tog'-kon sanoati vazirligi"] },
+
+  // 97
+  { q: "Kadastr axborotining 'dolzarbligi' deganda nima tushuniladi?",
+    correct: "Kadastr ma'lumotlarining mazmuni joyning hozirgi haqiqiy holatiga mos kelishi va real vaqt rejimida yangilab borilishi",
+    wrong: ["Ma'lumotlarning siyosiy ahamiyatini ko'rsatishi", "Kadastr ma'lumotlarining arxiv uchun muhimligi", "Qadimiy tarixiy ma'lumotlarning saqlanishi"] },
+
+  // 98
+  { q: "Konlar kadastrida 'texnogen hosila' nima?",
+    correct: "Inson xo'jalik faoliyati natijasida hosil bo'lgan, foydali komponentlarga ega bo'lgan to'plam (chiqindixonalar, terrikonlar, shlaklarlar)",
+    wrong: ["Tabiiy geologik jarayon natijasida hosil bo'lgan ma'dan qatlami", "Qayta ishlangan mineral xom-ashyo turi", "Texnik qurilmalar yordamida qazib olingan foydali qazilma"] },
+
+  // 99
+  { q: "Davlat suv kadastrining maqsadi nima?",
+    correct: "Suv resurslaridan oqilona foydalanishni tashkil etish va suv xo'jaligi munosabatlarini tartibga solish",
+    wrong: ["Suv resurslari ustidan xususiy nazorat o'rnatish", "Faqat ichimlik suvini himoya qilish", "Suv tariflari va narxlarini belgilash"] },
+
+  // 100
+  { q: "Qurilish hajmi qanday o'lchov birligida aniqlanadi?",
+    correct: "Kub metrlarda (m³) — QMQ 2.08.01-2002 ga muvofiq",
+    wrong: ["Kvadrat metrlarda (m²)", "Litrda (L)", "Tonnalarda (t)"] },
+
+  // 101
+  { q: "Kadastr raqamida tuman kodi nechanchi o'rinda turadi?",
+    correct: "Ikkinchi qismda (viloyat kodidan keyin) — VV→TT→kadastr zonasi→massiv→mavze→tartib raqami",
+    wrong: ["Birinchi o'rinda (boshlanish qismida)", "Uchinchi o'rinda (kadastr zonasidan keyin)", "To'rtinchi o'rinda (massivdan keyin)"] }
+];
+
+// ─── VARIANT CONFIG ───
+const VARIANTS = [
+  { num: 1, label: "I - VARIANT", range: "Savollar 1–26", color: "#e8c547", indices: range(0,26) },
+  { num: 2, label: "II - VARIANT", range: "Savollar 27–51", color: "#5b8af0", indices: range(26,51) },
+  { num: 3, label: "III - VARIANT", range: "Savollar 52–76", color: "#e05c7a", indices: range(51,76) },
+  { num: 4, label: "IV - VARIANT", range: "Savollar 77–101", color: "#4caf7d", indices: range(76,101) }
+];
+
+function range(s,e){ const r=[]; for(let i=s;i<e;i++) r.push(i); return r; }
+
+// ─── STATE ───
+let currentVariant = null;
+let questions = [];
+let currentIdx = 0;
+let score = 0;
+let answered = 0;
+
+// ─── INIT ───
+function buildVariantCards(){
+  const grid = document.getElementById('variantGrid');
+  grid.innerHTML = '';
+  VARIANTS.forEach(v => {
+    const card = document.createElement('div');
+    card.className = 'variant-card';
+    card.innerHTML = `
+      <div class="variant-num" style="color:${v.color}">${v.num}</div>
+      <div class="variant-label">${v.label}</div>
+      <div class="variant-range">${v.range}</div>
+    `;
+    card.onclick = () => startVariant(v);
+    grid.appendChild(card);
+  });
+}
+
+function shuffle(arr){ return [...arr].sort(()=>Math.random()-0.5); }
+
+function startVariant(v){
+  currentVariant = v;
+  // Take questions for this variant and shuffle them
+  questions = shuffle(v.indices.map(i => ALL_QUESTIONS[i]));
+  currentIdx = 0; score = 0; answered = 0;
+
+  document.getElementById('landing').style.display = 'none';
+  document.getElementById('result').style.display = 'none';
+  document.getElementById('quiz').style.display = 'flex';
+
+  document.getElementById('variantBadge').textContent = v.label;
+  document.getElementById('variantBadge').style.borderColor = v.color+'80';
+  document.getElementById('variantBadge').style.color = v.color;
+
+  showQuestion();
+}
+
+function showQuestion(){
+  const q = questions[currentIdx];
+  const total = questions.length;
+
+  document.getElementById('qNumber').textContent = `SAVOL ${String(currentIdx+1).padStart(2,'0')}`;
+  document.getElementById('qText').textContent = q.q;
+  document.getElementById('progressText').textContent = `${currentIdx+1} / ${total}`;
+  document.getElementById('progressFill').style.width = `${((currentIdx)/total)*100}%`;
+
+  // Build shuffled options
+  const opts = shuffle([
+    { text: q.correct, isCorrect: true },
+    ...q.wrong.map(w => ({ text: w, isCorrect: false }))
+  ]);
+
+  const letters = ['A', 'B', 'C', 'D'];
+  const list = document.getElementById('optionsList');
+  list.innerHTML = '';
+  opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="option-letter">${letters[i]}</span><span>${opt.text}</span>`;
+    btn.onclick = () => selectAnswer(btn, opt.isCorrect, q.correct, list);
+    list.appendChild(btn);
+  });
+
+  const fb = document.getElementById('feedbackBox');
+  fb.className = 'feedback-box';
+  fb.innerHTML = '';
+
+  const nextBtn = document.getElementById('nextBtn');
+  nextBtn.className = 'next-btn';
+  nextBtn.textContent = currentIdx === questions.length-1 ? 'Natijani ko\'rish →' : 'Keyingi savol →';
+
+  // re-animate card
+  const card = document.getElementById('questionCard');
+  card.style.animation = 'none';
+  void card.offsetWidth;
+  card.style.animation = 'fadeUp 0.35s ease';
+}
+
+function selectAnswer(btn, isCorrect, correctText, list){
+  // Disable all
+  list.querySelectorAll('.option-btn').forEach(b => {
+    b.disabled = true;
+    if(b.querySelector('span:last-child').textContent === correctText){
+      b.classList.add('correct');
+    }
+  });
+
+  const fb = document.getElementById('feedbackBox');
+  if(isCorrect){
+    btn.classList.add('correct');
+    score++;
+    fb.className = 'feedback-box correct-fb show';
+    fb.innerHTML = '<strong>✓ To\'g\'ri!</strong>Siz to\'g\'ri javobni tanladingiz.';
+  } else {
+    btn.classList.add('wrong');
+    fb.className = 'feedback-box wrong-fb show';
+    fb.innerHTML = `<strong>✗ Noto'g'ri.</strong>To'g'ri javob: <em>${correctText}</em>`;
+  }
+  answered++;
+  document.getElementById('nextBtn').classList.add('show');
+}
+
+function nextQuestion(){
+  currentIdx++;
+  if(currentIdx >= questions.length){
+    showResult();
+  } else {
+    showQuestion();
+  }
+}
+
+function showResult(){
+  document.getElementById('quiz').style.display = 'none';
+  document.getElementById('result').style.display = 'flex';
+
+  const total = questions.length;
+  const pct = Math.round((score/total)*100);
+
+  const scoreEl = document.getElementById('resultScore');
+  scoreEl.textContent = score;
+  scoreEl.className = 'result-score ' + (pct>=80 ? 'great' : pct>=50 ? 'ok' : 'low');
+
+  document.getElementById('totalQ').textContent = total;
+  document.getElementById('correctCount').textContent = score;
+  document.getElementById('wrongCount').textContent = total-score;
+
+  let msg = '';
+  if(pct>=90) msg = "Ajoyib! Siz materialni a'lo darajada o'zlashtirdingiz.";
+  else if(pct>=75) msg = "Yaxshi natija! Bir necha mavzularni takrorlashingiz tavsiya etiladi.";
+  else if(pct>=50) msg = "O'rtacha natija. Asosiy mavzularni qayta ko'rib chiqing.";
+  else msg = "Materialni qayta o'rganish kerak. Yana bir bor urinib ko'ring!";
+  document.getElementById('resultMsg').textContent = msg;
+}
+
+function retryVariant(){
+  if(currentVariant) startVariant(currentVariant);
+}
+
+function goHome(){
+  document.getElementById('quiz').style.display = 'none';
+  document.getElementById('result').style.display = 'none';
+  document.getElementById('landing').style.display = 'flex';
+}
+
+// ─── BOOT ───
+buildVariantCards();
+</script>
+</body>
+</html>
